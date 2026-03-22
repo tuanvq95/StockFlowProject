@@ -1,0 +1,70 @@
+# =========================
+# Go build files
+# =========================
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+dist/
+build/
+
+# Go coverage
+coverage.out
+*.coverprofile
+
+# Go workspace
+go.work
+go.work.sum
+
+# Vendor (nếu không commit vendor)
+vendor/
+
+# =========================
+# Environment files
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+tmp/
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Database local
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Test artifacts
+# =========================
+testdata/*.out

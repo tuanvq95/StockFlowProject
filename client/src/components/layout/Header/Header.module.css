@@ -1,0 +1,80 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  height: 60px;
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 1rem;
+}
+
+.brand a {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #a5b4fc;
+  letter-spacing: -0.02em;
+}
+
+.nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav a {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: color 0.15s;
+}
+
+.nav a.active,
+.nav a:hover {
+  color: #f1f5f9;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.username {
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+.btn {
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  background: #6366f1;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.btn:hover {
+  background: #4f46e5;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 1rem;
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .username {
+    display: none;
+  }
+}
