@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "react-i18next";
-import { useCurrency } from "../../contexts/CurrencyContext";
+import { useCurrency } from "../../contexts/useCurrency";
 import { orderService } from "../../services/orderService";
 import type { Order, OrderStatus } from "../../types/order";
 import { ORDER_STATUS_NEXT } from "../../types/order";
@@ -43,18 +43,54 @@ export default function OrderScanPage() {
   const { fmt } = useCurrency();
 
   // Dynamic steps using translations
-  const STEPS: { status: OrderStatus; label: string; icon: React.ReactNode }[] = [
-    { status: "PENDING", label: t("order.statusPending"), icon: <Package size={18} /> },
-    { status: "PACKING", label: t("order.statusPacking"), icon: <Package size={18} /> },
-    { status: "DELIVERING", label: t("order.statusDelivering"), icon: <Truck size={18} /> },
-    { status: "COMPLETED", label: t("order.statusCompleted"), icon: <CheckCircle size={18} /> },
-  ];
+  const STEPS: { status: OrderStatus; label: string; icon: React.ReactNode }[] =
+    [
+      {
+        status: "PENDING",
+        label: t("order.statusPending"),
+        icon: <Package size={18} />,
+      },
+      {
+        status: "PACKING",
+        label: t("order.statusPacking"),
+        icon: <Package size={18} />,
+      },
+      {
+        status: "DELIVERING",
+        label: t("order.statusDelivering"),
+        icon: <Truck size={18} />,
+      },
+      {
+        status: "COMPLETED",
+        label: t("order.statusCompleted"),
+        icon: <CheckCircle size={18} />,
+      },
+    ];
 
-  const NEXT_BTN: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
-    PACKING: { label: t("order.statusPacking"), className: styles.btnPacking, icon: <Package size={15} /> },
-    DELIVERING: { label: t("order.statusDelivering"), className: styles.btnDelivering, icon: <Truck size={15} /> },
-    COMPLETED: { label: t("order.statusCompleted"), className: styles.btnCompleted, icon: <CheckCircle size={15} /> },
-    CANCELLED: { label: t("order.cancelOrder"), className: styles.btnCancelled, icon: <XCircle size={15} /> },
+  const NEXT_BTN: Record<
+    string,
+    { label: string; className: string; icon: React.ReactNode }
+  > = {
+    PACKING: {
+      label: t("order.statusPacking"),
+      className: styles.btnPacking,
+      icon: <Package size={15} />,
+    },
+    DELIVERING: {
+      label: t("order.statusDelivering"),
+      className: styles.btnDelivering,
+      icon: <Truck size={15} />,
+    },
+    COMPLETED: {
+      label: t("order.statusCompleted"),
+      className: styles.btnCompleted,
+      icon: <CheckCircle size={15} />,
+    },
+    CANCELLED: {
+      label: t("order.cancelOrder"),
+      className: styles.btnCancelled,
+      icon: <XCircle size={15} />,
+    },
   };
 
   const [order, setOrder] = useState<Order | null>(null);
@@ -69,19 +105,22 @@ export default function OrderScanPage() {
   const [scanInput, setScanInput] = useState("");
   const scanInputRef = useRef<HTMLInputElement>(null);
 
-  const loadByCode = useCallback(async (c: string) => {
-    setLoading(true);
-    setError(null);
-    setOrder(null);
-    try {
-      const o = await orderService.getByCode(c);
-      setOrder(o);
-    } catch {
-      setError(t("order.loadError"));
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  const loadByCode = useCallback(
+    async (c: string) => {
+      setLoading(true);
+      setError(null);
+      setOrder(null);
+      try {
+        const o = await orderService.getByCode(c);
+        setOrder(o);
+      } catch {
+        setError(t("order.loadError"));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [t],
+  );
 
   useEffect(() => {
     if (code) {
@@ -223,7 +262,7 @@ export default function OrderScanPage() {
             </div>
           ) : (
             <div className={styles.cancelledBanner}>
-            <XCircle size={20} /> {t("order.statusCancelled")}
+              <XCircle size={20} /> {t("order.statusCancelled")}
             </div>
           )}
 
@@ -235,7 +274,17 @@ export default function OrderScanPage() {
                 <span
                   className={`${styles.badge} ${STATUS_COLORS[order.status]}`}
                 >
-                  {t(({ PENDING: "order.statusPending", PACKING: "order.statusPacking", DELIVERING: "order.statusDelivering", COMPLETED: "order.statusCompleted", CANCELLED: "order.statusCancelled" } as const)[order.status])}
+                  {t(
+                    (
+                      {
+                        PENDING: "order.statusPending",
+                        PACKING: "order.statusPacking",
+                        DELIVERING: "order.statusDelivering",
+                        COMPLETED: "order.statusCompleted",
+                        CANCELLED: "order.statusCancelled",
+                      } as const
+                    )[order.status],
+                  )}
                 </span>
               </div>
               <div className={styles.infoGrid}>
@@ -276,7 +325,8 @@ export default function OrderScanPage() {
                 className={styles.btnShowQr}
                 onClick={() => setShowQr((v) => !v)}
               >
-                <QrCode size={14} /> {showQr ? t("common.close") : t("order.viewQR")}
+                <QrCode size={14} />{" "}
+                {showQr ? t("common.close") : t("order.viewQR")}
               </button>
               {showQr && (
                 <div className={styles.inlineQr}>
@@ -294,7 +344,9 @@ export default function OrderScanPage() {
             {/* Items card */}
             <div className={styles.card}>
               <div className={styles.cardHeader}>
-                <span>{t("order.items")} ({order.items?.length ?? 0})</span>
+                <span>
+                  {t("order.items")} ({order.items?.length ?? 0})
+                </span>
               </div>
               <div className={styles.itemsTableWrap}>
                 <table className={styles.itemsTable}>
@@ -356,7 +408,9 @@ export default function OrderScanPage() {
                       ) : (
                         cfg.icon
                       )}
-                      {updating === s ? t("common.saving") : `${t("order.updateStatus")} ${cfg.label}`}
+                      {updating === s
+                        ? t("common.saving")
+                        : `${t("order.updateStatus")} ${cfg.label}`}
                     </button>
                   );
                 })}

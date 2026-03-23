@@ -11,7 +11,7 @@ import (
 type Repository interface {
 	FindPaged(ctx context.Context, q TxPageQuery) (PagedResult, error)
 	FindByID(ctx context.Context, id int64) (*Transaction, error)
-	Create(ctx context.Context, req CreateTransactionRequest) (*Transaction, error)
+	Create(ctx context.Context, req CreateTransactionRequest, txCode string) (*Transaction, error)
 }
 
 type repository struct {
@@ -47,13 +47,13 @@ func (r *repository) FindPaged(ctx context.Context, q TxPageQuery) (PagedResult,
 	pageArgIdx := len(args) + 1
 	offsetArgIdx := len(args) + 2
 	dataQuery := fmt.Sprintf(`
-		SELECT t.id, t.type, t.note, t.created_at,
+		SELECT t.id, t.tx_code, t.type, t.note, t.created_at,
 		       ISNULL(SUM(i.quantity * i.unit_price), 0) AS total_amount,
 		       COUNT(i.id) AS item_count
 		FROM stock_transactions t
 		LEFT JOIN stock_transaction_items i ON i.transaction_id = t.id
 		%s
-		GROUP BY t.id, t.type, t.note, t.created_at
+		GROUP BY t.id, t.tx_code, t.type, t.note, t.created_at
 		ORDER BY t.id DESC
 		OFFSET @p%d ROWS FETCH NEXT @p%d ROWS ONLY`,
 		where, pageArgIdx, offsetArgIdx,
@@ -77,13 +77,13 @@ func (r *repository) FindPaged(ctx context.Context, q TxPageQuery) (PagedResult,
 
 func (r *repository) FindByID(ctx context.Context, id int64) (*Transaction, error) {
 	txQuery := `
-		SELECT t.id, t.type, t.note, t.created_at,
+		SELECT t.id, t.tx_code, t.type, t.note, t.created_at,
 		       ISNULL(SUM(i.quantity * i.unit_price), 0) AS total_amount,
 		       COUNT(i.id) AS item_count
 		FROM stock_transactions t
 		LEFT JOIN stock_transaction_items i ON i.transaction_id = t.id
 		WHERE t.id = @p1
-		GROUP BY t.id, t.type, t.note, t.created_at`
+		GROUP BY t.id, t.tx_code, t.type, t.note, t.created_at`
 
 	var tx Transaction
 	if err := r.db.GetContext(ctx, &tx, txQuery, id); err != nil {
@@ -106,7 +106,7 @@ func (r *repository) FindByID(ctx context.Context, id int64) (*Transaction, erro
 	return &tx, nil
 }
 
-func (r *repository) Create(ctx context.Context, req CreateTransactionRequest) (*Transaction, error) {
+func (r *repository) Create(ctx context.Context, req CreateTransactionRequest, txCode string) (*Transaction, error) {
 	dbtx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -115,8 +115,8 @@ func (r *repository) Create(ctx context.Context, req CreateTransactionRequest) (
 
 	var txID int64
 	err = dbtx.QueryRowContext(ctx,
-		`INSERT INTO stock_transactions (type, note) OUTPUT INSERTED.id VALUES (@p1, @p2)`,
-		string(req.Type), req.Note,
+		`INSERT INTO stock_transactions (type, note, tx_code) OUTPUT INSERTED.id VALUES (@p1, @p2, @p3)`,
+		string(req.Type), req.Note, txCode,
 	).Scan(&txID)
 	if err != nil {
 		return nil, err

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Settings2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useCurrency } from "../../../contexts/CurrencyContext";
+import { useCurrency } from "../../../contexts/useCurrency";
 import styles from "./ExchangeRateSettings.module.css";
 
 export default function ExchangeRateSettings() {
@@ -37,7 +37,11 @@ export default function ExchangeRateSettings() {
 
   return (
     <>
-      <button className={styles.trigger} onClick={handleOpen} title={t("currency.rate")}>
+      <button
+        className={styles.trigger}
+        onClick={handleOpen}
+        title={t("currency.rate")}
+      >
         <Settings2 size={15} />
       </button>
 
@@ -45,7 +49,11 @@ export default function ExchangeRateSettings() {
         <div className={styles.backdrop} onClick={() => setOpen(false)}>
           <div className={styles.popover} onClick={(e) => e.stopPropagation()}>
             <p className={styles.title}>{t("currency.rate")}</p>
-            <p className={styles.hint}>{t("currency.currentRate", { rate: usdToVnd.toLocaleString("vi-VN") })}</p>
+            <p className={styles.hint}>
+              {t("currency.currentRate", {
+                rate: usdToVnd.toLocaleString("vi-VN"),
+              })}
+            </p>
             <div className={styles.inputRow}>
               <span className={styles.prefix}>1 USD =</span>
               <input
@@ -60,13 +68,22 @@ export default function ExchangeRateSettings() {
               <span className={styles.suffix}>VNĐ</span>
             </div>
             {msg && (
-              <p className={msg.ok ? styles.success : styles.error}>{msg.text}</p>
+              <p className={msg.ok ? styles.success : styles.error}>
+                {msg.text}
+              </p>
             )}
             <div className={styles.actions}>
-              <button className={styles.btnCancel} onClick={() => setOpen(false)}>
+              <button
+                className={styles.btnCancel}
+                onClick={() => setOpen(false)}
+              >
                 {t("common.cancel")}
               </button>
-              <button className={styles.btnSave} onClick={handleSave} disabled={saving}>
+              <button
+                className={styles.btnSave}
+                onClick={handleSave}
+                disabled={saving}
+              >
                 {saving ? t("currency.updating") : t("currency.updateRate")}
               </button>
             </div>

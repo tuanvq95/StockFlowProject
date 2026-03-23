@@ -8,6 +8,7 @@ IF OBJECT_ID('dbo.stock_transactions', 'U') IS NOT NULL
 
 CREATE TABLE stock_transactions (
     id         BIGINT        IDENTITY(1,1) PRIMARY KEY,
+    tx_code NVARCHAR(30) NOT NULL DEFAULT '',
     type       NVARCHAR(10)  NOT NULL CHECK (type IN ('IMPORT', 'EXPORT')),
     note       NVARCHAR(500) NOT NULL DEFAULT '',
     created_at DATETIME2     NOT NULL DEFAULT GETDATE()

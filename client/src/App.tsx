@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
-import { CurrencyProvider } from "./contexts/CurrencyContext";
+import { CurrencyProvider } from "./contexts/CurrencyProvider";
 import AppRoutes from "./routes/AppRoutes";
 
 function App() {

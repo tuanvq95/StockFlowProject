@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { dashboardService } from "../../services/dashboardService";
-import { useCurrency } from "../../contexts/CurrencyContext";
+import { useCurrency } from "../../contexts/useCurrency";
 import type { DashboardData } from "../../types/dashboard";
 import styles from "./Dashboard.module.css";
 
@@ -158,7 +158,7 @@ function CustomTooltip({
 
 export default function DashboardPage() {
   const { t } = useTranslation();
-  const { fmt } = useCurrency();
+  const { fmtUsd: fmt } = useCurrency();
   const [tab, setTab] = useState<Tab>("sales");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);

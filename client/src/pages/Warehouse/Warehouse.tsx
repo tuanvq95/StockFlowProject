@@ -10,7 +10,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useCurrency } from "../../contexts/CurrencyContext";
+import { useCurrency } from "../../contexts/useCurrency";
 import { warehouseService } from "../../services/warehouseService";
 import { productService } from "../../services/productService";
 import type {
@@ -32,7 +32,7 @@ const emptyForm = () => ({ note: "", items: [emptyItem()] });
 
 export default function WarehousePage() {
   const { t } = useTranslation();
-  const { fmt } = useCurrency();
+  const { fmtUsd } = useCurrency();
   const [result, setResult] = useState<WPagedResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -198,7 +198,7 @@ export default function WarehousePage() {
 
       {/*  Filter bar  */}
       <div className={styles.filterBar}>
-        {(["" , "IMPORT", "EXPORT"] as const).map((txType) => (
+        {(["", "IMPORT", "EXPORT"] as const).map((txType) => (
           <button
             key={txType}
             className={`${styles.chip}${typeFilter === txType ? ` ${styles.chipActive}` : ""}`}
@@ -207,7 +207,11 @@ export default function WarehousePage() {
               setPage(1);
             }}
           >
-            {txType === "" ? t("warehouse.all") : txType === "IMPORT" ? t("warehouse.import") : t("warehouse.export")}
+            {txType === ""
+              ? t("warehouse.all")
+              : txType === "IMPORT"
+                ? t("warehouse.import")
+                : t("warehouse.export")}
           </button>
         ))}
         <span className={styles.resultCount}>
@@ -220,7 +224,7 @@ export default function WarehousePage() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>{t("warehouse.id")}</th>
+              <th>{t("warehouse.code")}</th>
               <th>{t("warehouse.type")}</th>
               <th>{t("warehouse.note")}</th>
               <th>{t("warehouse.items")}</th>
@@ -245,7 +249,9 @@ export default function WarehousePage() {
             ) : (
               transactions.map((tx) => (
                 <tr key={tx.id}>
-                  <td>#{tx.id}</td>
+                  <td className={styles.codeCell}>
+                    {tx.tx_code || `#${tx.id}`}
+                  </td>
                   <td>
                     <span
                       className={`${styles.badge} ${
@@ -254,12 +260,14 @@ export default function WarehousePage() {
                           : styles.badgeExport
                       }`}
                     >
-                      {tx.type === "IMPORT" ? t("warehouse.import") : t("warehouse.export")}
+                      {tx.type === "IMPORT"
+                        ? t("warehouse.import")
+                        : t("warehouse.export")}
                     </span>
                   </td>
                   <td className={styles.noteCell}>{tx.note || "?"}</td>
                   <td>{tx.item_count}</td>
-                  <td>{fmt(tx.total_amount)}</td>
+                  <td>{fmtUsd(tx.total_amount)}</td>
                   <td>{new Date(tx.created_at).toLocaleDateString()}</td>
                   <td>
                     <div className={styles.actions}>
@@ -385,7 +393,7 @@ export default function WarehousePage() {
                 <div className={styles.itemColLabels}>
                   <span>{t("warehouse.product")}</span>
                   <span>{t("warehouse.qty")}</span>
-                  <span>{t("warehouse.unitPrice")}</span>
+                  <span>{t("warehouse.unitPrice")} ($)</span>
                   <span />
                 </div>
                 {createForm.items.map((item, i) => (
@@ -398,7 +406,7 @@ export default function WarehousePage() {
                       <option value="">{t("warehouse.select")}</option>
                       {products.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.name} (stock: {p.stock})
+                          {p.name} — ${p.price.toFixed(2)} (stock: {p.stock})
                         </option>
                       ))}
                     </select>
@@ -411,15 +419,11 @@ export default function WarehousePage() {
                       }
                       required
                     />
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={item.unit_price}
-                      onChange={(e) =>
-                        updateItem(i, "unit_price", Number(e.target.value))
-                      }
-                    />
+                    <span
+                      className={`${styles.unitPriceDisplay}${item.product_id ? " " + styles.unitPriceActive : ""}`}
+                    >
+                      {item.product_id ? fmtUsd(item.unit_price) : "—"}
+                    </span>
                     <button
                       type="button"
                       className={styles.btnRemoveItem}
@@ -433,7 +437,8 @@ export default function WarehousePage() {
               </div>
 
               <div className={styles.totalRow}>
-                {t("warehouse.totalLabel")} <strong>{fmt(createTotal)}</strong>
+                {t("warehouse.totalLabel")}{" "}
+                <strong>{fmtUsd(createTotal)}</strong>
               </div>
 
               {submitError && <p className={styles.error}>{submitError}</p>}
@@ -455,7 +460,11 @@ export default function WarehousePage() {
                   }
                   disabled={submitting}
                 >
-                  {submitting ? t("common.saving") : createType === "IMPORT" ? t("warehouse.newImport") : t("warehouse.newExport")}
+                  {submitting
+                    ? t("common.saving")
+                    : createType === "IMPORT"
+                      ? t("warehouse.newImport")
+                      : t("warehouse.newExport")}
                 </button>
               </div>
             </form>
@@ -468,7 +477,10 @@ export default function WarehousePage() {
         <div className={styles.overlay} onClick={closeDetail}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>{t("warehouse.detail")} #{viewTx?.id ?? ""}</h2>
+              <h2>
+                {t("warehouse.detail")}{" "}
+                {viewTx?.tx_code || `#${viewTx?.id ?? ""}`}
+              </h2>
               <button className={styles.modalClose} onClick={closeDetail}>
                 <X size={18} />
               </button>
@@ -488,7 +500,9 @@ export default function WarehousePage() {
                         : styles.badgeExport
                     }`}
                   >
-                    {viewTx.type === "IMPORT" ? t("warehouse.import") : t("warehouse.export")}
+                    {viewTx.type === "IMPORT"
+                      ? t("warehouse.import")
+                      : t("warehouse.export")}
                   </span>
                   <span className={styles.detailDate}>
                     {new Date(viewTx.created_at).toLocaleString()}
@@ -515,10 +529,8 @@ export default function WarehousePage() {
                           <td>{i + 1}</td>
                           <td>{item.product_name}</td>
                           <td>{item.quantity}</td>
-                          <td>{fmt(item.unit_price)}</td>
-                          <td>
-                            {fmt(item.quantity * item.unit_price)}
-                          </td>
+                          <td>{fmtUsd(item.unit_price)}</td>
+                          <td>{fmtUsd(item.quantity * item.unit_price)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -528,7 +540,7 @@ export default function WarehousePage() {
                           {t("common.total")}
                         </td>
                         <td className={styles.totalValue}>
-                          {viewTx.total_amount.toLocaleString("vi-VN")}đ
+                          {fmtUsd(viewTx.total_amount)}
                         </td>
                       </tr>
                     </tfoot>

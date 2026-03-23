@@ -115,6 +115,7 @@
     "import": "NHẬP",
     "export": "XUẤT",
     "id": "Mã",
+    "code": "Mã phiếu",
     "type": "Loại",
     "note": "Ghi chú",
     "items": "Mặt hàng",

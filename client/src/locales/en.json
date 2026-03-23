@@ -115,6 +115,7 @@
     "import": "IMPORT",
     "export": "EXPORT",
     "id": "ID",
+    "code": "Code",
     "type": "Type",
     "note": "Note",
     "items": "Items",

@@ -11,6 +11,7 @@ const (
 
 type Transaction struct {
 	ID          int64     `db:"id"           json:"id"`
+	TxCode      string    `db:"tx_code"       json:"tx_code"`
 	Type        TxType    `db:"type"         json:"type"`
 	Note        string    `db:"note"         json:"note"`
 	CreatedAt   time.Time `db:"created_at"   json:"created_at"`

@@ -2,6 +2,7 @@ export type TxType = "IMPORT" | "EXPORT";
 
 export interface WarehouseTransaction {
   id: number;
+  tx_code: string;
   type: TxType;
   note: string;
   created_at: string;

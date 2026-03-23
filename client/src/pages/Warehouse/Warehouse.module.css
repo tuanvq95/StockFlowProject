@@ -154,6 +154,14 @@
   white-space: nowrap;
 }
 
+.codeCell {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4f46e5;
+  white-space: nowrap;
+}
+
 /* „Ÿ„Ÿ Badges „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
 .badge {
   display: inline-block;
@@ -467,6 +475,26 @@
 
 .btnRemoveItem:hover:not(:disabled) { background: #fecaca; }
 .btnRemoveItem:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.unitPriceDisplay {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-align: right;
+  padding: 0.38rem 0.5rem;
+  border: 1.5px dashed #e2e8f0;
+  border-radius: 7px;
+  background: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unitPriceActive {
+  color: #6366f1;
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
 
 /* „Ÿ„Ÿ Total row „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
 .totalRow {

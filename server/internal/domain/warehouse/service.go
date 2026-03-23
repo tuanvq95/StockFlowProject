@@ -3,6 +3,8 @@ package warehouse
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 )
 
 type Service interface {
@@ -46,5 +48,19 @@ func (s *service) Create(ctx context.Context, req CreateTransactionRequest) (*Tr
 			return nil, errors.New("quantity must be greater than 0")
 		}
 	}
-	return s.repo.Create(ctx, req)
+	txCode := generateTxCode(req.Type)
+	return s.repo.Create(ctx, req, txCode)
+}
+
+func generateTxCode(txType TxType) string {
+	prefix := "IMP"
+	if txType == TxExport {
+		prefix = "EXP"
+	}
+	now := time.Now()
+	return fmt.Sprintf("%s-%s-%06d",
+		prefix,
+		now.Format("20060102"),
+		now.UnixNano()%1_000_000,
+	)
 }

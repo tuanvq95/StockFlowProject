@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "react-i18next";
-import { useCurrency } from "../../contexts/CurrencyContext";
+import { useCurrency } from "../../contexts/useCurrency";
 import { orderService } from "../../services/orderService";
 import { productService } from "../../services/productService";
 import type {
@@ -46,7 +46,7 @@ const emptyItem = (): CreateOrderItemRequest => ({
 export default function OrderPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { fmt } = useCurrency();
+  const { fmtUsd } = useCurrency();
   const [result, setResult] = useState<OrderPagedResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -222,16 +222,18 @@ export default function OrderPage() {
               setPage(1);
             }}
           >
-            {s === "" ? t("order.statusAll") : (() => {
-              const keys: Record<OrderStatus, string> = {
-                PENDING: "order.statusPending",
-                PACKING: "order.statusPacking",
-                DELIVERING: "order.statusDelivering",
-                COMPLETED: "order.statusCompleted",
-                CANCELLED: "order.statusCancelled",
-              };
-              return t(keys[s as OrderStatus]);
-            })()}
+            {s === ""
+              ? t("order.statusAll")
+              : (() => {
+                  const keys: Record<OrderStatus, string> = {
+                    PENDING: "order.statusPending",
+                    PACKING: "order.statusPacking",
+                    DELIVERING: "order.statusDelivering",
+                    COMPLETED: "order.statusCompleted",
+                    CANCELLED: "order.statusCancelled",
+                  };
+                  return t(keys[s as OrderStatus]);
+                })()}
           </button>
         ))}
         <form className={styles.searchForm} onSubmit={handleSearch}>
@@ -245,7 +247,9 @@ export default function OrderPage() {
             <Search size={14} />
           </button>
         </form>
-        <span className={styles.resultCount}>{totalCount} {t("order.title").toLowerCase()}</span>
+        <span className={styles.resultCount}>
+          {totalCount} {t("order.title").toLowerCase()}
+        </span>
       </div>
 
       {/* Table */}
@@ -285,10 +289,20 @@ export default function OrderPage() {
                     <span
                       className={`${styles.badge} ${STATUS_COLORS[o.status]}`}
                     >
-                      {t(({ PENDING: "order.statusPending", PACKING: "order.statusPacking", DELIVERING: "order.statusDelivering", COMPLETED: "order.statusCompleted", CANCELLED: "order.statusCancelled" } as const)[o.status])}
+                      {t(
+                        (
+                          {
+                            PENDING: "order.statusPending",
+                            PACKING: "order.statusPacking",
+                            DELIVERING: "order.statusDelivering",
+                            COMPLETED: "order.statusCompleted",
+                            CANCELLED: "order.statusCancelled",
+                          } as const
+                        )[o.status],
+                      )}
                     </span>
                   </td>
-                  <td>{fmt(o.total_amount)}</td>
+                  <td>{fmtUsd(o.total_amount)}</td>
                   <td>{new Date(o.created_at).toLocaleDateString("vi-VN")}</td>
                   <td>
                     <div className={styles.actions}>
@@ -434,7 +448,7 @@ export default function OrderPage() {
                 <div className={styles.itemColLabels}>
                   <span>{t("order.product")}</span>
                   <span>{t("order.qty")}</span>
-                  <span>{t("order.unitPrice")} (₫)</span>
+                  <span>{t("order.unitPrice")} ($)</span>
                   <span>{t("warehouse.subtotal")}</span>
                   <span />
                 </div>
@@ -448,7 +462,7 @@ export default function OrderPage() {
                       <option value="">{t("order.select")}</option>
                       {products.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.name}
+                          {p.name} — ${p.price.toFixed(2)}
                         </option>
                       ))}
                     </select>
@@ -461,17 +475,15 @@ export default function OrderPage() {
                       }
                       required
                     />
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={item.unit_price}
-                      onChange={(e) =>
-                        updateItem(i, "unit_price", Number(e.target.value))
-                      }
-                    />
+                    <span
+                      className={`${styles.unitPriceDisplay}${item.product_id ? " " + styles.unitPriceActive : ""}`}
+                    >
+                      {item.product_id ? fmtUsd(item.unit_price) : "—"}
+                    </span>
                     <span className={styles.subtotal}>
-                      {fmt(item.quantity * item.unit_price)}
+                      {item.product_id
+                        ? fmtUsd(item.quantity * item.unit_price)
+                        : "—"}
                     </span>
                     <button
                       type="button"
@@ -486,7 +498,7 @@ export default function OrderPage() {
               </div>
 
               <div className={styles.totalRow}>
-                {t("order.total")} <strong>{fmt(total)}</strong>
+                {t("order.total")} <strong>{fmtUsd(total)}</strong>
               </div>
 
               {submitError && <p className={styles.error}>{submitError}</p>}
@@ -550,21 +562,27 @@ export default function OrderPage() {
                   <span
                     className={`${styles.badge} ${STATUS_COLORS[qrOrder.status]}`}
                   >
-                    {t(({ PENDING: "order.statusPending", PACKING: "order.statusPacking", DELIVERING: "order.statusDelivering", COMPLETED: "order.statusCompleted", CANCELLED: "order.statusCancelled" } as const)[qrOrder.status])}
+                    {t(
+                      (
+                        {
+                          PENDING: "order.statusPending",
+                          PACKING: "order.statusPacking",
+                          DELIVERING: "order.statusDelivering",
+                          COMPLETED: "order.statusCompleted",
+                          CANCELLED: "order.statusCancelled",
+                        } as const
+                      )[qrOrder.status],
+                    )}
                   </span>
                 </div>
                 <div className={styles.qrInfoRow}>
                   <span>{t("order.totalAmount")}:</span>
-                  <strong>
-                    {fmt(qrOrder.total_amount)}
-                  </strong>
+                  <strong>{fmtUsd(qrOrder.total_amount)}</strong>
                 </div>
               </div>
             </div>
 
-            <p className={styles.qrHint}>
-              {t("order.qrInstruction")}
-            </p>
+            <p className={styles.qrHint}>{t("order.qrInstruction")}</p>
 
             <div className={styles.modalActions}>
               <button
