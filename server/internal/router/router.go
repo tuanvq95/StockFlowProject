@@ -2,7 +2,9 @@ package router
 
 import (
 	"go-crud/internal/domain/auth"
+	appconfig "go-crud/internal/domain/config"
 	"go-crud/internal/domain/dashboard"
+	"go-crud/internal/domain/order"
 	"go-crud/internal/domain/product"
 	"go-crud/internal/domain/user"
 	"go-crud/internal/domain/warehouse"
@@ -41,6 +43,16 @@ func SetupUserRoutes(r *gin.Engine, db *sqlx.DB) *gin.Engine {
 	// Dashboard
 	dashboardHandler := dashboard.NewHandler(db)
 	dashboardHandler.RegisterRoutes(api)
+
+	// Order domain
+	orderRepo := order.NewRepository(db)
+	orderSvc := order.NewService(orderRepo)
+	orderHandler := order.NewHandler(orderSvc)
+	orderHandler.RegisterRoutes(api)
+
+	// App config (exchange rate, etc.)
+	configHandler := appconfig.NewHandler(db)
+	configHandler.RegisterRoutes(api)
 
 	return r
 }

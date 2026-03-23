@@ -3,6 +3,7 @@ package main
 import (
 	"go-crud/internal/config"
 	"go-crud/internal/database"
+	appconfig "go-crud/internal/domain/config"
 	"go-crud/internal/logger"
 	"go-crud/internal/middleware"
 	"go-crud/internal/router"
@@ -29,6 +30,11 @@ func main() {
 	}()
 
 	logger.Log.Info("Database connected")
+
+	// Sync live USD→VND exchange rate into app_config on startup
+	appconfig.SyncExchangeRate(db)
+	// Schedule daily re-sync (retry once on failure)
+	appconfig.StartDailySync(db)
 
 	// 4 Setup router
 	r := gin.New()

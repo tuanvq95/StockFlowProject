@@ -1,5 +1,7 @@
 ﻿import { useEffect, useState, useCallback, type FormEvent } from "react";
 import { Plus, Trash2, FileDown, Search, X, ChevronLeft, ChevronRight, Pencil, SlidersHorizontal } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useCurrency } from "../../contexts/CurrencyContext";
 import { productService } from "../../services/productService";
 import type { Product, CreateProductRequest, PagedResult } from "../../types/product";
 import { exportProductsToExcel } from "../../utils/exportExcel";
@@ -17,6 +19,8 @@ const emptyForm: CreateProductRequest = {
 const emptyFilter = { minPrice: "", maxPrice: "", minStock: "", maxStock: "" };
 
 export default function ProductPage() {
+  const { t } = useTranslation();
+  const { fmtUsd } = useCurrency();
   const [result, setResult] = useState<PagedResult<Product> | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -79,7 +83,7 @@ export default function ProductPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Delete this product?")) return;
+    if (!window.confirm(t("product.deleteConfirm"))) return;
     await productService.delete(id);
     fetchProducts();
   };
@@ -95,7 +99,7 @@ export default function ProductPage() {
       setPage(1);
       fetchProducts();
     } catch {
-      setError("Failed to create product.");
+      setError(t("product.createError"));
     } finally {
       setSubmitting(false);
     }
@@ -118,7 +122,7 @@ export default function ProductPage() {
       setForm(emptyForm);
       fetchProducts();
     } catch {
-      setError("Failed to update product.");
+      setError(t("product.updateError"));
     } finally {
       setSubmitting(false);
     }
@@ -151,7 +155,7 @@ export default function ProductPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1>Products</h1>
+        <h1>{t("product.title")}</h1>
         <div className={styles.toolbar}>
           <button
             className={styles.btnExport}
@@ -159,10 +163,10 @@ export default function ProductPage() {
             disabled={loading || exporting}
             title="Export to Excel"
           >
-            <FileDown size={16} /> {exporting ? "Exporting..." : "Export Excel"}
+            <FileDown size={16} /> {exporting ? t("product.exporting") : t("product.exportExcel")}
           </button>
           <button className={styles.btnAdd} onClick={() => setShowModal(true)}>
-            <Plus size={16} /> Add Product
+            <Plus size={16} /> {t("product.add")}
           </button>
         </div>
       </div>
@@ -175,7 +179,7 @@ export default function ProductPage() {
             <input
               className={styles.searchInput}
               type="text"
-              placeholder="Search products..."
+              placeholder={t("product.search")}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
@@ -189,26 +193,26 @@ export default function ProductPage() {
             className={`${styles.btnFilter}${showFilter || hasRangeFilters ? ` ${styles.btnFilterActive}` : ""}`}
             onClick={() => setShowFilter((s) => !s)}
           >
-            <SlidersHorizontal size={14} /> Filter
+            <SlidersHorizontal size={14} /> {t("common.filter")}
             {hasRangeFilters && <span className={styles.filterDot} />}
           </button>
           {hasActiveFilters && (
             <button className={styles.clearAllBtn} onClick={clearAll}>
-              <X size={13} /> Clear
+              <X size={13} /> {t("common.clear")}
             </button>
           )}
           <span className={styles.resultCount}>
-            {total} product{total !== 1 ? "s" : ""}
+            {t("product.resultCount", { count: total })}
           </span>
         </div>
         {showFilter && (
           <div className={styles.filterPanel}>
             <div className={styles.rangeGroup}>
-              <span className={styles.rangeLabel}>Price ($)</span>
+              <span className={styles.rangeLabel}>{t("product.filterPrice")}</span>
               <input
                 className={styles.rangeInput}
                 type="number"
-                placeholder="Min"
+                placeholder={t("common.min")}
                 min="0"
                 step="0.01"
                 value={filterInput.minPrice}
@@ -218,7 +222,7 @@ export default function ProductPage() {
               <input
                 className={styles.rangeInput}
                 type="number"
-                placeholder="Max"
+                placeholder={t("common.max")}
                 min="0"
                 step="0.01"
                 value={filterInput.maxPrice}
@@ -226,11 +230,11 @@ export default function ProductPage() {
               />
             </div>
             <div className={styles.rangeGroup}>
-              <span className={styles.rangeLabel}>Stock</span>
+              <span className={styles.rangeLabel}>{t("product.filterStock")}</span>
               <input
                 className={styles.rangeInput}
                 type="number"
-                placeholder="Min"
+                placeholder={t("common.min")}
                 min="0"
                 value={filterInput.minStock}
                 onChange={(e) => setFilterInput((p) => ({ ...p, minStock: e.target.value }))}
@@ -239,7 +243,7 @@ export default function ProductPage() {
               <input
                 className={styles.rangeInput}
                 type="number"
-                placeholder="Max"
+                placeholder={t("common.max")}
                 min="0"
                 value={filterInput.maxStock}
                 onChange={(e) => setFilterInput((p) => ({ ...p, maxStock: e.target.value }))}
@@ -254,25 +258,25 @@ export default function ProductPage() {
           <thead>
             <tr>
               <th>#</th>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Created</th>
-              <th>Actions</th>
+              <th>{t("product.name")}</th>
+              <th>{t("product.description")}</th>
+              <th>{t("product.price")}</th>
+              <th>{t("product.stock")}</th>
+              <th>{t("product.created")}</th>
+              <th>{t("product.actions")}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className={styles.empty}>Loading...</td>
+                <td colSpan={7} className={styles.empty}>{t("common.loading")}</td>
               </tr>
             ) : products.length === 0 ? (
               <tr>
                 <td colSpan={7} className={styles.empty}>
                   {search || filter.minPrice || filter.maxPrice || filter.minStock || filter.maxStock
-                    ? "No products match your filters."
-                    : "No products yet. Add one!"}
+                    ? t("product.noMatch")
+                    : t("product.noData")}
                 </td>
               </tr>
             ) : (
@@ -281,7 +285,7 @@ export default function ProductPage() {
                   <td>{p.id}</td>
                   <td>{p.name}</td>
                   <td>{p.description || "-"}</td>
-                  <td>${p.price.toFixed(2)}</td>
+                  <td>{fmtUsd(p.price)}</td>
                   <td>
                     <span className={`${styles.badge} ${p.stock === 0 ? styles.badgeLow : ""}`}>
                       {p.stock}
@@ -355,7 +359,7 @@ export default function ProductPage() {
           </button>
 
           <span className={styles.pageInfo}>
-            Page {page} of {totalPages}
+            {t("common.page")} {page} {t("common.of")} {totalPages}
           </span>
         </div>
       )}
@@ -363,31 +367,31 @@ export default function ProductPage() {
       {showModal && (
         <div className={styles.overlay} onClick={() => setShowModal(false)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h2>Add Product</h2>
+            <h2>{t("product.add")}</h2>
             <form className={styles.form} onSubmit={handleSubmit}>
               <div className={styles.field}>
-                <label htmlFor="name">Name *</label>
+                <label htmlFor="name">{t("product.nameLabel")}</label>
                 <input
                   id="name"
                   value={form.name}
                   onChange={set("name")}
                   required
-                  placeholder="Product name"
+                  placeholder={t("product.namePlaceholder")}
                 />
               </div>
               <div className={styles.field}>
-                <label htmlFor="description">Description</label>
+                <label htmlFor="description">{t("product.descriptionLabel")}</label>
                 <textarea
                   id="description"
                   value={form.description}
                   onChange={set("description")}
                   rows={3}
-                  placeholder="Optional description"
+                  placeholder={t("product.descriptionPlaceholder")}
                 />
               </div>
               <div className={styles.row}>
                 <div className={styles.field}>
-                  <label htmlFor="price">Price *</label>
+                  <label htmlFor="price">{t("product.priceUsdLabel")}</label>
                   <input
                     id="price"
                     type="number"
@@ -395,11 +399,12 @@ export default function ProductPage() {
                     step="0.01"
                     value={form.price}
                     onChange={set("price")}
+                    placeholder="0.00"
                     required
                   />
                 </div>
                 <div className={styles.field}>
-                  <label htmlFor="stock">Stock</label>
+                  <label htmlFor="stock">{t("product.stockLabel")}</label>
                   <input
                     id="stock"
                     type="number"
@@ -416,10 +421,10 @@ export default function ProductPage() {
                   className={styles.btnCancel}
                   onClick={() => { setShowModal(false); setForm(emptyForm); setError(null); }}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button type="submit" className={styles.btnSubmit} disabled={submitting}>
-                  {submitting ? "Saving..." : "Save"}
+                  {submitting ? t("common.saving") : t("common.save")}
                 </button>
               </div>
             </form>
@@ -430,31 +435,31 @@ export default function ProductPage() {
       {editingProduct && (
         <div className={styles.overlay} onClick={() => { setEditingProduct(null); setForm(emptyForm); setError(null); }}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h2>Edit Product</h2>
+            <h2>{t("product.edit")}</h2>
             <form className={styles.form} onSubmit={handleUpdate}>
               <div className={styles.field}>
-                <label htmlFor="edit-name">Name *</label>
+                <label htmlFor="edit-name">{t("product.nameLabel")}</label>
                 <input
                   id="edit-name"
                   value={form.name}
                   onChange={set("name")}
                   required
-                  placeholder="Product name"
+                  placeholder={t("product.namePlaceholder")}
                 />
               </div>
               <div className={styles.field}>
-                <label htmlFor="edit-description">Description</label>
+                <label htmlFor="edit-description">{t("product.descriptionLabel")}</label>
                 <textarea
                   id="edit-description"
                   value={form.description}
                   onChange={set("description")}
                   rows={3}
-                  placeholder="Optional description"
+                  placeholder={t("product.descriptionPlaceholder")}
                 />
               </div>
               <div className={styles.row}>
                 <div className={styles.field}>
-                  <label htmlFor="edit-price">Price *</label>
+                  <label htmlFor="edit-price">{t("product.priceUsdLabel")}</label>
                   <input
                     id="edit-price"
                     type="number"
@@ -466,7 +471,7 @@ export default function ProductPage() {
                   />
                 </div>
                 <div className={styles.field}>
-                  <label htmlFor="edit-stock">Stock</label>
+                  <label htmlFor="edit-stock">{t("product.stockLabel")}</label>
                   <input
                     id="edit-stock"
                     type="number"
@@ -483,10 +488,10 @@ export default function ProductPage() {
                   className={styles.btnCancel}
                   onClick={() => { setEditingProduct(null); setForm(emptyForm); setError(null); }}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button type="submit" className={styles.btnSubmit} disabled={submitting}>
-                  {submitting ? "Saving..." : "Update"}
+                  {submitting ? t("common.saving") : t("common.update")}
                 </button>
               </div>
             </form>

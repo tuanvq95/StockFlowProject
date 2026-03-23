@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+Ôªøimport { useEffect, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -20,12 +20,37 @@ import {
   PackagePlus,
   PackageMinus,
   RefreshCw,
+  ShoppingCart,
+  CheckCircle,
+  Clock,
+  Truck,
+  XCircle,
+  Archive,
+  TrendingUp,
+  AlertCircle,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { dashboardService } from "../../services/dashboardService";
+import { useCurrency } from "../../contexts/CurrencyContext";
 import type { DashboardData } from "../../types/dashboard";
 import styles from "./Dashboard.module.css";
 
-// ÑüÑü Stat card ÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑü
+// -- Helpers --
+type Tab = "sales" | "inventory" | "warehouse";
+
+const fmtDate = (d: string) => d.slice(5).replace("-", "/");
+
+const BAR_COLORS = [
+  "#6366f1",
+  "#22c55e",
+  "#f97316",
+  "#3b82f6",
+  "#a855f7",
+  "#14b8a6",
+  "#ef4444",
+  "#eab308",
+];
+
 interface StatCardProps {
   icon: React.ReactNode;
   label: string;
@@ -35,11 +60,21 @@ interface StatCardProps {
   iconColor: string;
   accent: string;
 }
-
-function StatCard({ icon, label, value, sub, iconBg, iconColor, accent }: StatCardProps) {
+function StatCard({
+  icon,
+  label,
+  value,
+  sub,
+  iconBg,
+  iconColor,
+  accent,
+}: StatCardProps) {
   return (
     <div className={styles.card} style={{ borderLeftColor: accent }}>
-      <div className={styles.cardIcon} style={{ background: iconBg, color: iconColor }}>
+      <div
+        className={styles.cardIcon}
+        style={{ background: iconBg, color: iconColor }}
+      >
         {icon}
       </div>
       <div className={styles.cardBody}>
@@ -51,316 +86,454 @@ function StatCard({ icon, label, value, sub, iconBg, iconColor, accent }: StatCa
   );
 }
 
-// ÑüÑü Custom tooltip for area chart ÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑü
-function AreaTooltip({ active, payload, label }: {
+interface PeriodCardProps {
+  title: string;
+  orders: number;
+  revenue: number;
+  accent: string;
+  icon: React.ReactNode;
+  ordersUnit: string;
+  fmt: (n: number) => string;
+}
+function PeriodCard({
+  title,
+  orders,
+  revenue,
+  accent,
+  icon,
+  ordersUnit,
+  fmt,
+}: PeriodCardProps) {
+  return (
+    <div className={styles.periodCard} style={{ borderTopColor: accent }}>
+      <div className={styles.periodHeader}>
+        <span className={styles.periodIcon} style={{ color: accent }}>
+          {icon}
+        </span>
+        <span className={styles.periodTitle}>{title}</span>
+      </div>
+      <p className={styles.periodOrders}>
+        <strong>{orders.toLocaleString("vi-VN")}</strong>
+        <span> {ordersUnit}</span>
+      </p>
+      <p className={styles.periodRevenue} style={{ color: accent }}>
+        {fmt(revenue)}
+      </p>
+    </div>
+  );
+}
+
+function CustomTooltip({
+  active,
+  payload,
+  label,
+  valueFormatter,
+}: {
   active?: boolean;
   payload?: Array<{ name: string; value: number; color: string }>;
   label?: string;
+  valueFormatter?: (name: string, v: number) => string;
 }) {
   if (!active || !payload?.length) return null;
   return (
     <div className={styles.tooltip}>
       <p className={styles.tooltipDate}>{label}</p>
       {payload.map((p) => (
-        <p key={p.name} style={{ color: p.color }} className={styles.tooltipRow}>
-          <span>{p.name === "import_qty" ? "Import" : "Export"}</span>
-          <strong>{p.value.toLocaleString()} units</strong>
+        <p
+          key={p.name}
+          style={{ color: p.color }}
+          className={styles.tooltipRow}
+        >
+          <span>{p.name}</span>
+          <strong>
+            {valueFormatter
+              ? valueFormatter(p.name, p.value)
+              : p.value.toLocaleString("vi-VN")}
+          </strong>
         </p>
       ))}
     </div>
   );
 }
 
-function BarTooltip({ active, payload, label }: {
-  active?: boolean;
-  payload?: Array<{ value: number }>;
-  label?: string;
-}) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className={styles.tooltip}>
-      <p className={styles.tooltipDate}>{label}</p>
-      <p className={styles.tooltipRow}>
-        <span>Stock</span>
-        <strong>{payload[0].value.toLocaleString()} units</strong>
-      </p>
-    </div>
-  );
-}
-
-// Bar colors cycle for top products
-const BAR_COLORS = [
-  "#6366f1", "#22c55e", "#f97316", "#3b82f6",
-  "#a855f7", "#14b8a6", "#ef4444", "#eab308",
-];
-
-// ÑüÑü Main page ÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑüÑü
 export default function DashboardPage() {
+  const { t } = useTranslation();
+  const { fmt } = useCurrency();
+  const [tab, setTab] = useState<Tab>("sales");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  // load() only mutates state from outside the effect (event handler)
-  const load = () => {
-    setLoading(true);
-    setError(null);
-    setRefreshKey((k) => k + 1);
-  };
-
-  // effect only calls setState inside async callbacks, never synchronously
   useEffect(() => {
-    let active = true;
     dashboardService
       .get()
-      .then((d) => { if (active) setData(d); })
-      .catch(() => { if (active) setError("Failed to load dashboard data."); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [refreshKey]);
+      .then(setData)
+      .catch(() => setError(t("common.error")))
+      .finally(() => setLoading(false));
+  }, [t]);
 
-  const { summary, daily_activity = [], top_products = [] } = data ?? {
-    summary: {
-      total_products: 0,
-      total_stock_units: 0,
-      total_stock_value: 0,
-      low_stock_count: 0,
-      imports_this_month: 0,
-      exports_this_month: 0,
-    },
-    daily_activity: [],
-    top_products: [],
-  };
+  if (loading)
+    return <div className={styles.loader}>{t("common.loading")}</div>;
+  if (error || !data)
+    return <div className={styles.loader}>{error || t("common.error")}</div>;
 
-  // Show only last 15 date labels to avoid X-axis clutter
-  const tickInterval = Math.floor(daily_activity.length / 6) || 4;
+  const { summary, sales, daily_activity, daily_sales, top_products } = data;
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "sales", label: t("dashboard.tabSales") },
+    { key: "inventory", label: t("dashboard.tabInventory") },
+    { key: "warehouse", label: t("dashboard.tabWarehouse") },
+  ];
 
   return (
     <div className={styles.page}>
-      {/* Header */}
-      <div className={styles.pageHeader}>
-        <h1>Dashboard</h1>
-        <button className={styles.refreshBtn} onClick={load} disabled={loading} title="Refresh">
-          <RefreshCw size={15} className={loading ? styles.spinning : ""} />
-          Refresh
-        </button>
+      {/* Tab bar */}
+      <div className={styles.tabBar}>
+        {tabs.map((tb) => (
+          <button
+            key={tb.key}
+            className={`${styles.tabBtn} ${tab === tb.key ? styles.tabBtnActive : ""}`}
+            onClick={() => setTab(tb.key)}
+          >
+            {tb.label}
+          </button>
+        ))}
       </div>
 
-      {error && <p className={styles.errorBanner}>{error}</p>}
+      {/* ?? Sales Tab ?? */}
+      {tab === "sales" && (
+        <div className={styles.section}>
+          <div className={styles.periodGrid}>
+            <PeriodCard
+              title={t("dashboard.today")}
+              orders={sales.today_orders}
+              revenue={sales.today_revenue}
+              accent="#6366f1"
+              icon={<ShoppingCart size={18} />}
+              ordersUnit={t("dashboard.orders")}
+              fmt={fmt}
+            />
+            <PeriodCard
+              title={t("dashboard.thisWeek")}
+              orders={sales.week_orders}
+              revenue={sales.week_revenue}
+              accent="#22c55e"
+              icon={<TrendingUp size={18} />}
+              ordersUnit={t("dashboard.orders")}
+              fmt={fmt}
+            />
+            <PeriodCard
+              title={t("dashboard.thisMonth")}
+              orders={sales.month_orders}
+              revenue={sales.month_revenue}
+              accent="#f97316"
+              icon={<DollarSign size={18} />}
+              ordersUnit={t("dashboard.orders")}
+              fmt={fmt}
+            />
+          </div>
 
-      {/* ÑüÑü Stat cards ÑüÑü */}
-      <div className={styles.cards}>
-        <StatCard
-          icon={<Package size={20} />}
-          label="Total Products"
-          value={summary.total_products.toLocaleString()}
-          sub="distinct SKUs"
-          iconBg="#eef2ff" iconColor="#6366f1" accent="#6366f1"
-        />
-        <StatCard
-          icon={<Layers size={20} />}
-          label="Total Stock Units"
-          value={summary.total_stock_units.toLocaleString()}
-          sub="units across all products"
-          iconBg="#dbeafe" iconColor="#3b82f6" accent="#3b82f6"
-        />
-        <StatCard
-          icon={<DollarSign size={20} />}
-          label="Total Stock Value"
-          value={`$${summary.total_stock_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub="at current prices"
-          iconBg="#dcfce7" iconColor="#16a34a" accent="#16a34a"
-        />
-        <StatCard
-          icon={<AlertTriangle size={20} />}
-          label="Low Stock"
-          value={summary.low_stock_count.toLocaleString()}
-          sub="products with stock < 10"
-          iconBg="#fef9c3" iconColor="#ca8a04" accent="#f59e0b"
-        />
-        <StatCard
-          icon={<PackagePlus size={20} />}
-          label="Imports This Month"
-          value={summary.imports_this_month.toLocaleString()}
-          sub="import transactions"
-          iconBg="#d1fae5" iconColor="#059669" accent="#10b981"
-        />
-        <StatCard
-          icon={<PackageMinus size={20} />}
-          label="Exports This Month"
-          value={summary.exports_this_month.toLocaleString()}
-          sub="export transactions"
-          iconBg="#ffedd5" iconColor="#ea580c" accent="#f97316"
-        />
-      </div>
+          <div className={styles.statusRow}>
+            <span className={`${styles.statusChip} ${styles.chipPending}`}>
+              <Clock size={13} /> {t("dashboard.statusPending")}:{" "}
+              {sales.pending_orders}
+            </span>
+            <span className={`${styles.statusChip} ${styles.chipPacking}`}>
+              <Archive size={13} /> {t("dashboard.statusPacking")}:{" "}
+              {sales.packing_orders}
+            </span>
+            <span className={`${styles.statusChip} ${styles.chipDelivering}`}>
+              <Truck size={13} /> {t("dashboard.statusDelivering")}:{" "}
+              {sales.delivering_orders}
+            </span>
+            <span className={`${styles.statusChip} ${styles.chipCompleted}`}>
+              <CheckCircle size={13} /> {t("dashboard.statusCompleted")}:{" "}
+              {sales.completed_orders}
+            </span>
+            <span className={`${styles.statusChip} ${styles.chipCancelled}`}>
+              <XCircle size={13} /> {t("dashboard.statusCancelled")}:{" "}
+              {sales.cancelled_orders}
+            </span>
+          </div>
 
-      {/* ÑüÑü Charts row ÑüÑü */}
-      <div className={styles.charts}>
-        {/* Area chart: daily import/export */}
-        <div className={styles.chartBox}>
-          <p className={styles.chartTitle}>Import / Export Activity <span className={styles.chartSub}>(last 30 days, units)</span></p>
-          {loading ? (
-            <div className={styles.chartPlaceholder}>LoadingÅc</div>
-          ) : (
+          <div className={styles.chartBox}>
+            <h3 className={styles.chartTitle}>{t("dashboard.dailyRevenue")}</h3>
             <ResponsiveContainer width="100%" height={240}>
-              <AreaChart data={daily_activity} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+              <AreaChart data={daily_sales}>
                 <defs>
-                  <linearGradient id="gradImport" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="gradExport" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
-                  tickLine={false}
-                  axisLine={false}
-                  interval={tickInterval}
-                  tickFormatter={(v: string) => v.slice(5).replace("-", "/")}
+                  tickFormatter={fmtDate}
+                  tick={{ fontSize: 11 }}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={36}
-                  allowDecimals={false}
+                  tickFormatter={(v) => fmt(v)}
+                  tick={{ fontSize: 11 }}
+                  width={80}
                 />
-                <Tooltip content={<AreaTooltip />} />
-                <Legend
-                  iconType="circle"
-                  iconSize={8}
-                  formatter={(v) => (
-                    <span style={{ fontSize: 12, color: "#475569" }}>
-                      {v === "import_qty" ? "Import" : "Export"}
-                    </span>
-                  )}
+                <Tooltip
+                  content={
+                    <CustomTooltip
+                      valueFormatter={(name, v) =>
+                        name === t("dashboard.revenue")
+                          ? fmt(v)
+                          : v.toLocaleString("vi-VN")
+                      }
+                    />
+                  }
+                />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  name={t("dashboard.revenue")}
+                  stroke="#6366f1"
+                  fill="url(#revGrad)"
+                  strokeWidth={2}
+                  dot={false}
                 />
                 <Area
                   type="monotone"
-                  dataKey="import_qty"
+                  dataKey="order_count"
+                  name={t("dashboard.ordersLabel")}
                   stroke="#22c55e"
+                  fill="none"
                   strokeWidth={2}
-                  fill="url(#gradImport)"
                   dot={false}
-                  activeDot={{ r: 4 }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="export_qty"
-                  stroke="#f97316"
-                  strokeWidth={2}
-                  fill="url(#gradExport)"
-                  dot={false}
-                  activeDot={{ r: 4 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
-          )}
+          </div>
         </div>
+      )}
 
-        {/* Bar chart: top products by stock */}
-        <div className={styles.chartBox}>
-          <p className={styles.chartTitle}>Top Products <span className={styles.chartSub}>(by stock)</span></p>
-          {loading ? (
-            <div className={styles.chartPlaceholder}>LoadingÅc</div>
-          ) : top_products.length === 0 ? (
-            <div className={styles.chartPlaceholder}>No products yet.</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart
-                data={top_products}
-                layout="vertical"
-                margin={{ top: 4, right: 24, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
-                  tickLine={false}
-                  axisLine={false}
-                  allowDecimals={false}
+      {/* ?? Inventory Tab ?? */}
+      {tab === "inventory" && (
+        <div className={styles.section}>
+          <div className={styles.cardGrid}>
+            <StatCard
+              icon={<Package size={20} />}
+              label={t("dashboard.totalProducts")}
+              value={summary.total_products.toLocaleString("vi-VN")}
+              iconBg="#ede9fe"
+              iconColor="#7c3aed"
+              accent="#7c3aed"
+            />
+            <StatCard
+              icon={<Layers size={20} />}
+              label={t("dashboard.totalStock")}
+              value={summary.total_stock_units.toLocaleString("vi-VN")}
+              iconBg="#dcfce7"
+              iconColor="#16a34a"
+              accent="#16a34a"
+            />
+            <StatCard
+              icon={<DollarSign size={20} />}
+              label={t("dashboard.stockValue")}
+              value={fmt(summary.total_stock_value)}
+              iconBg="#fef9c3"
+              iconColor="#ca8a04"
+              accent="#ca8a04"
+            />
+            <StatCard
+              icon={<AlertTriangle size={20} />}
+              label={t("dashboard.lowStock")}
+              value={summary.low_stock_count}
+              iconBg="#fee2e2"
+              iconColor="#dc2626"
+              accent="#dc2626"
+            />
+            <StatCard
+              icon={<AlertCircle size={20} />}
+              label={t("dashboard.outOfStock")}
+              value={summary.out_of_stock}
+              iconBg="#fef2f2"
+              iconColor="#ef4444"
+              accent="#ef4444"
+            />
+          </div>
+
+          <div className={styles.chartBox}>
+            <h3 className={styles.chartTitle}>{t("dashboard.topByStock")}</h3>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={top_products} layout="vertical">
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#e2e8f0"
+                  horizontal={false}
                 />
+                <XAxis type="number" tick={{ fontSize: 11 }} />
                 <YAxis
-                  type="category"
                   dataKey="name"
-                  width={90}
-                  tick={{ fontSize: 11, fill: "#475569" }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v: string) => v.length > 12 ? v.slice(0, 11) + "..." : v}
+                  type="category"
+                  width={120}
+                  tick={{ fontSize: 11 }}
                 />
-                <Tooltip content={<BarTooltip />} />
-                <Bar dataKey="stock" radius={[0, 5, 5, 0]}>
+                <Tooltip
+                  content={
+                    <CustomTooltip
+                      valueFormatter={(_, v) => v.toLocaleString("vi-VN")}
+                    />
+                  }
+                />
+                <Bar
+                  dataKey="stock"
+                  name={t("dashboard.totalStock")}
+                  radius={[0, 4, 4, 0]}
+                >
                   {top_products.map((_, i) => (
                     <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* ÑüÑü Amount chart (import/export value) ÑüÑü */}
-      <div className={styles.chartBoxWide}>
-        <p className={styles.chartTitle}>Import / Export Value <span className={styles.chartSub}>(last 30 days, $)</span></p>
-        {loading ? (
-          <div className={styles.chartPlaceholder}>LoadingÅc</div>
-        ) : (
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={daily_activity} margin={{ top: 4, right: 16, left: 8, bottom: 0 }}>
-              <defs>
-                <linearGradient id="gradImportAmt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gradExportAmt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11, fill: "#94a3b8" }}
-                tickLine={false}
-                axisLine={false}
-                interval={tickInterval}
-                tickFormatter={(v: string) => v.slice(5).replace("-", "/")}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "#94a3b8" }}
-                tickLine={false}
-                axisLine={false}
-                width={52}
-                tickFormatter={(v: number) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`}
-              />
-              <Tooltip
-                formatter={(v, name) => [
-                  `$${Number(v ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                  name === "import_amount" ? "Import" : "Export",
-                ]}
-              />
-              <Legend
-                iconType="circle"
-                iconSize={8}
-                formatter={(v) => (
-                  <span style={{ fontSize: 12, color: "#475569" }}>
-                    {v === "import_amount" ? "Import ($)" : "Export ($)"}
-                  </span>
-                )}
-              />
-              <Area type="monotone" dataKey="import_amount" stroke="#22c55e" strokeWidth={2} fill="url(#gradImportAmt)" dot={false} />
-              <Area type="monotone" dataKey="export_amount" stroke="#f97316" strokeWidth={2} fill="url(#gradExportAmt)" dot={false} />
-            </AreaChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+      {/* ?? Warehouse Tab ?? */}
+      {tab === "warehouse" && (
+        <div className={styles.section}>
+          <div className={styles.cardGrid}>
+            <StatCard
+              icon={<PackagePlus size={20} />}
+              label={t("dashboard.importsMonth")}
+              value={summary.imports_this_month.toLocaleString("vi-VN")}
+              iconBg="#dcfce7"
+              iconColor="#16a34a"
+              accent="#16a34a"
+            />
+            <StatCard
+              icon={<PackageMinus size={20} />}
+              label={t("dashboard.exportsMonth")}
+              value={summary.exports_this_month.toLocaleString("vi-VN")}
+              iconBg="#fef9c3"
+              iconColor="#ca8a04"
+              accent="#ca8a04"
+            />
+            <StatCard
+              icon={<DollarSign size={20} />}
+              label={t("dashboard.importValue")}
+              value={fmt(summary.import_value_month)}
+              iconBg="#ede9fe"
+              iconColor="#7c3aed"
+              accent="#7c3aed"
+            />
+            <StatCard
+              icon={<RefreshCw size={20} />}
+              label={t("dashboard.exportValue")}
+              value={fmt(summary.export_value_month)}
+              iconBg="#fee2e2"
+              iconColor="#dc2626"
+              accent="#dc2626"
+            />
+          </div>
+
+          <div className={styles.chartBox}>
+            <h3 className={styles.chartTitle}>
+              {t("dashboard.dailyActivity")}
+            </h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={daily_activity}>
+                <defs>
+                  <linearGradient id="inGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="outGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={fmtDate}
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="import_qty"
+                  name={t("dashboard.importQty")}
+                  stroke="#22c55e"
+                  fill="url(#inGrad)"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="export_qty"
+                  name={t("dashboard.exportQty")}
+                  stroke="#f97316"
+                  fill="url(#outGrad)"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className={styles.chartBox}>
+            <h3 className={styles.chartTitle}>{t("dashboard.dailyValue")}</h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={daily_activity}>
+                <defs>
+                  <linearGradient id="inValGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="outValGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ec4899" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={fmtDate}
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis
+                  tickFormatter={(v) => fmt(v)}
+                  tick={{ fontSize: 11 }}
+                  width={80}
+                />
+                <Tooltip
+                  content={<CustomTooltip valueFormatter={(_, v) => fmt(v)} />}
+                />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="import_amount"
+                  name={t("dashboard.importAmount")}
+                  stroke="#6366f1"
+                  fill="url(#inValGrad)"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="export_amount"
+                  name={t("dashboard.exportAmount")}
+                  stroke="#ec4899"
+                  fill="url(#outValGrad)"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

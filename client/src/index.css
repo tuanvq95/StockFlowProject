@@ -11,11 +11,13 @@ html {
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, Arial, sans-serif;
+  font-family: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, Arial, sans-serif;
   background: #f1f5f9;
   color: #1e293b;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* „Ÿ„Ÿ Typography „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
@@ -54,9 +56,11 @@ input, textarea, select {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 99px;

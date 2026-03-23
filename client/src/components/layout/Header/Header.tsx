@@ -1,25 +1,23 @@
-import { Link, NavLink } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { LogOut, LogIn, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../../constants/routes";
 import { useAuthContext } from "../../../contexts/useAuthContext";
+import { LanguageSwitcher, ExchangeRateSettings } from "../../common";
 import styles from "./Header.module.css";
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuthContext();
+  const { t } = useTranslation();
 
   return (
     <header className={styles.header}>
       <div className={styles.brand}>
-        <Link to={ROUTES.HOME}>MyApp</Link>
+        <Link to={ROUTES.HOME}>{t("header.brand")}</Link>
       </div>
-      <nav className={styles.nav}>
-        <NavLink
-          to={ROUTES.HOME}
-          className={({ isActive }) => (isActive ? styles.active : "")}
-        >
-        </NavLink>
-      </nav>
       <div className={styles.actions}>
+        <LanguageSwitcher />
+        {isAuthenticated && <ExchangeRateSettings />}
         {isAuthenticated ? (
           <>
             <span className={styles.username}>
@@ -28,13 +26,13 @@ export default function Header() {
             </span>
             <button onClick={logout} className={styles.btn}>
               <LogOut size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />
-              Logout
+              {t("header.logout")}
             </button>
           </>
         ) : (
           <Link to={ROUTES.LOGIN} className={styles.btn}>
             <LogIn size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />
-            Login
+            {t("header.login")}
           </Link>
         )}
       </div>

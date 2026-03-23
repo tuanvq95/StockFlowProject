@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "../../contexts/useAuthContext";
 import { ROUTES } from "../../constants/routes";
 import styles from "./Login.module.css";
@@ -7,6 +8,7 @@ import styles from "./Login.module.css";
 export default function Login() {
   const { login, isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export default function Login() {
     try {
       await login(email, password);
     } catch {
-      setError("Invalid email or password.");
+      setError(t("login.invalidCredentials"));
     } finally {
       setLoading(false);
     }
@@ -34,10 +36,10 @@ export default function Login() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <h1 className={styles.title}>Sign in</h1>
+        <h1 className={styles.title}>{t("login.title")}</h1>
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
           <label className={styles.label} htmlFor="email">
-            Email
+            {t("login.email")}
           </label>
           <input
             id="email"
@@ -49,7 +51,7 @@ export default function Login() {
             autoComplete="email"
           />
           <label className={styles.label} htmlFor="password">
-            Password
+            {t("login.password")}
           </label>
           <input
             id="password"
@@ -62,16 +64,17 @@ export default function Login() {
           />
           {error && <p className={styles.error}>{error}</p>}
           <button type="submit" className={styles.btn} disabled={loading}>
-            {loading ? "Signing inÅc" : "Sign in"}
+            {loading ? t("login.submitting") : t("login.submit")}
           </button>
         </form>
         <p className={styles.footer}>
-          Don't have an account?{" "}
+          {t("login.noAccount")}{" "}
           <Link to={ROUTES.HOME} className={styles.link}>
-            Contact admin
+            {t("login.contactAdmin")}
           </Link>
         </p>
       </div>
     </div>
   );
 }
+

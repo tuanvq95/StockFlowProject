@@ -1,11 +1,11 @@
-/* Page */
+/* ── Page ─────────────────────────────────────────────── */
 .page {
   height: 100%;
   min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 1rem;
   padding-bottom: 1.5rem;
 }
 
@@ -48,8 +48,13 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .spinning {
@@ -65,7 +70,160 @@
   flex-shrink: 0;
 }
 
-/* Stat cards */
+/* ── Tab bar ──────────────────────────────────────────── */
+.tabBar {
+  display: flex;
+  gap: 0;
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.3rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+  width: fit-content;
+}
+
+.tabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.tabBtn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.tabBtnActive {
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.tabBtnActive:hover {
+  background: #1d4ed8;
+}
+
+/* ── Tab content wrapper ──────────────────────────────── */
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Period cards (Bán hàng tab) ──────────────────────── */
+.periodRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.periodCard {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  border-top: 3px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: box-shadow 0.15s;
+}
+
+.periodCard:hover {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+}
+
+.periodHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.periodIcon {
+  display: flex;
+  align-items: center;
+}
+
+.periodTitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.periodOrders {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.periodOrders strong {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.periodRevenue {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* ── Status bar ───────────────────────────────────────── */
+.statusBar {
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.8rem 1.25rem;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.statusBarTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.statusChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.statusChip strong {
+  font-weight: 700;
+}
+
+/* ── Stat cards (grid) ────────────────────────────────── */
 .cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -116,7 +274,7 @@
 }
 
 .cardValue {
-  font-size: 1.45rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 0.1rem;
@@ -135,22 +293,8 @@
   text-overflow: ellipsis;
 }
 
-/* Charts row */
-.charts {
-  display: grid;
-  grid-template-columns: 1.65fr 1fr;
-  gap: 1rem;
-  flex-shrink: 0;
-}
-
+/* ── Chart boxes ──────────────────────────────────────── */
 .chartBox {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1.1rem 1.25rem 0.75rem;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
-}
-
-.chartBoxWide {
   background: #fff;
   border-radius: 12px;
   padding: 1.1rem 1.25rem 0.75rem;
@@ -172,7 +316,7 @@
 }
 
 .chartPlaceholder {
-  height: 240px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -180,13 +324,13 @@
   font-size: 0.875rem;
 }
 
-/* Custom recharts tooltip */
+/* ── Custom recharts tooltip ──────────────────────────── */
 .tooltip {
   background: #1e293b;
   border-radius: 8px;
   padding: 0.55rem 0.85rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  min-width: 140px;
+  min-width: 160px;
 }
 
 .tooltipDate {
@@ -211,13 +355,13 @@
   font-weight: 600;
 }
 
-/* Responsive */
+/* ── Responsive ───────────────────────────────────────── */
 @media (max-width: 900px) {
   .cards {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .charts {
+  .periodRow {
     grid-template-columns: 1fr;
   }
 }
@@ -225,5 +369,10 @@
 @media (max-width: 560px) {
   .cards {
     grid-template-columns: 1fr;
+  }
+
+  .tabBtn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
   }
 }

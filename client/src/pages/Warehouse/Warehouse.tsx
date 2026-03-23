@@ -9,6 +9,8 @@ import {
   ChevronRight,
   Eye,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useCurrency } from "../../contexts/CurrencyContext";
 import { warehouseService } from "../../services/warehouseService";
 import { productService } from "../../services/productService";
 import type {
@@ -21,10 +23,16 @@ import type { Product } from "../../types/product";
 import styles from "./Warehouse.module.css";
 
 const PAGE_SIZE = 10;
-const emptyItem = (): CreateItemRequest => ({ product_id: 0, quantity: 1, unit_price: 0 });
+const emptyItem = (): CreateItemRequest => ({
+  product_id: 0,
+  quantity: 1,
+  unit_price: 0,
+});
 const emptyForm = () => ({ note: "", items: [emptyItem()] });
 
 export default function WarehousePage() {
+  const { t } = useTranslation();
+  const { fmt } = useCurrency();
   const [result, setResult] = useState<WPagedResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -61,7 +69,7 @@ export default function WarehousePage() {
     fetchList();
   }, [fetchList]);
 
-  // „Ÿ„Ÿ Create modal „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
+  // Â„ÂŸÂ„ÂŸ Create modal Â„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸ
   const openCreate = (type: TxType) => {
     setCreateType(type);
     setCreateForm(emptyForm());
@@ -78,7 +86,10 @@ export default function WarehousePage() {
     setCreateForm((p) => ({ ...p, items: [...p.items, emptyItem()] }));
 
   const removeItem = (i: number) =>
-    setCreateForm((p) => ({ ...p, items: p.items.filter((_, idx) => idx !== i) }));
+    setCreateForm((p) => ({
+      ...p,
+      items: p.items.filter((_, idx) => idx !== i),
+    }));
 
   const selectProduct = (i: number, productId: number) => {
     const product = products.find((p) => p.id === productId);
@@ -86,27 +97,37 @@ export default function WarehousePage() {
       ...prev,
       items: prev.items.map((item, idx) =>
         idx === i
-          ? { ...item, product_id: productId, unit_price: product?.price ?? item.unit_price }
-          : item
+          ? {
+              ...item,
+              product_id: productId,
+              unit_price: product?.price ?? item.unit_price,
+            }
+          : item,
       ),
     }));
   };
 
-  const updateItem = (i: number, field: keyof CreateItemRequest, value: number) =>
+  const updateItem = (
+    i: number,
+    field: keyof CreateItemRequest,
+    value: number,
+  ) =>
     setCreateForm((prev) => ({
       ...prev,
-      items: prev.items.map((item, idx) => (idx === i ? { ...item, [field]: value } : item)),
+      items: prev.items.map((item, idx) =>
+        idx === i ? { ...item, [field]: value } : item,
+      ),
     }));
 
   const createTotal = createForm.items.reduce(
     (sum, item) => sum + item.quantity * item.unit_price,
-    0
+    0,
   );
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (createForm.items.some((i) => i.product_id === 0)) {
-      setSubmitError("Please select a product for all rows.");
+      setSubmitError(t("warehouse.selectProductError"));
       return;
     }
     setSubmitError(null);
@@ -120,15 +141,15 @@ export default function WarehousePage() {
       closeCreate();
       fetchList();
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      setSubmitError(msg ?? "Failed to save transaction.");
+      const msg = (err as { response?: { data?: { error?: string } } })
+        ?.response?.data?.error;
+      setSubmitError(msg ?? t("warehouse.saveError"));
     } finally {
       setSubmitting(false);
     }
   };
 
-  // „Ÿ„Ÿ Detail modal „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
+  // Â„ÂŸÂ„ÂŸ Detail modal Â„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸ
   const openDetail = async (id: number) => {
     setShowDetail(true);
     setViewTx(null);
@@ -138,7 +159,7 @@ export default function WarehousePage() {
       const tx = await warehouseService.getById(id);
       setViewTx(tx);
     } catch {
-      setDetailError("Failed to load transaction.");
+      setDetailError(t("common.error"));
     } finally {
       setViewLoading(false);
     }
@@ -149,61 +170,78 @@ export default function WarehousePage() {
     setViewTx(null);
   };
 
-  // „Ÿ„Ÿ Derived „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
+  // Â„ÂŸÂ„ÂŸ Derived Â„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸÂ„ÂŸ
   const transactions = result?.items ?? [];
   const totalPages = result?.total_pages ?? 1;
   const total = result?.total ?? 0;
 
   return (
     <div className={styles.page}>
-      {/* „Ÿ„Ÿ Header „Ÿ„Ÿ */}
+      {/* Â„ÂŸÂ„ÂŸ Header Â„ÂŸÂ„ÂŸ */}
       <div className={styles.header}>
-        <h1>Warehouse</h1>
+        <h1>{t("warehouse.title")}</h1>
         <div className={styles.toolbar}>
-          <button className={styles.btnImport} onClick={() => openCreate("IMPORT")}>
-            <PackagePlus size={16} /> New Import
+          <button
+            className={styles.btnImport}
+            onClick={() => openCreate("IMPORT")}
+          >
+            <PackagePlus size={16} /> {t("warehouse.newImport")}
           </button>
-          <button className={styles.btnExportTx} onClick={() => openCreate("EXPORT")}>
-            <PackageMinus size={16} /> New Export
+          <button
+            className={styles.btnExportTx}
+            onClick={() => openCreate("EXPORT")}
+          >
+            <PackageMinus size={16} /> {t("warehouse.newExport")}
           </button>
         </div>
       </div>
 
-      {/* „Ÿ„Ÿ Filter bar „Ÿ„Ÿ */}
+      {/* Â„ÂŸÂ„ÂŸ Filter bar Â„ÂŸÂ„ÂŸ */}
       <div className={styles.filterBar}>
-        {(["", "IMPORT", "EXPORT"] as const).map((t) => (
+        {(["" , "IMPORT", "EXPORT"] as const).map((txType) => (
           <button
-            key={t}
-            className={`${styles.chip}${typeFilter === t ? ` ${styles.chipActive}` : ""}`}
-            onClick={() => { setTypeFilter(t); setPage(1); }}
+            key={txType}
+            className={`${styles.chip}${typeFilter === txType ? ` ${styles.chipActive}` : ""}`}
+            onClick={() => {
+              setTypeFilter(txType);
+              setPage(1);
+            }}
           >
-            {t === "" ? "All" : t === "IMPORT" ? "Import" : "Export"}
+            {txType === "" ? t("warehouse.all") : txType === "IMPORT" ? t("warehouse.import") : t("warehouse.export")}
           </button>
         ))}
         <span className={styles.resultCount}>
-          {total} transaction{total !== 1 ? "s" : ""}
+          {t("warehouse.resultCount", { count: total })}
         </span>
       </div>
 
-      {/* „Ÿ„Ÿ Table „Ÿ„Ÿ */}
+      {/* Â„ÂŸÂ„ÂŸ Table Â„ÂŸÂ„ÂŸ */}
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Type</th>
-              <th>Note</th>
-              <th>Items</th>
-              <th>Total ($)</th>
-              <th>Date</th>
-              <th>Actions</th>
+              <th>{t("warehouse.id")}</th>
+              <th>{t("warehouse.type")}</th>
+              <th>{t("warehouse.note")}</th>
+              <th>{t("warehouse.items")}</th>
+              <th>{t("warehouse.totalPrice")}</th>
+              <th>{t("warehouse.date")}</th>
+              <th>{t("warehouse.actions")}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className={styles.empty}>Loading...</td></tr>
+              <tr>
+                <td colSpan={7} className={styles.empty}>
+                  {t("common.loading")}
+                </td>
+              </tr>
             ) : transactions.length === 0 ? (
-              <tr><td colSpan={7} className={styles.empty}>No transactions yet.</td></tr>
+              <tr>
+                <td colSpan={7} className={styles.empty}>
+                  {t("warehouse.noData")}
+                </td>
+              </tr>
             ) : (
               transactions.map((tx) => (
                 <tr key={tx.id}>
@@ -211,30 +249,34 @@ export default function WarehousePage() {
                   <td>
                     <span
                       className={`${styles.badge} ${
-                        tx.type === "IMPORT" ? styles.badgeImport : styles.badgeExport
+                        tx.type === "IMPORT"
+                          ? styles.badgeImport
+                          : styles.badgeExport
                       }`}
                     >
-                      {tx.type}
+                      {tx.type === "IMPORT" ? t("warehouse.import") : t("warehouse.export")}
                     </span>
                   </td>
                   <td className={styles.noteCell}>{tx.note || "?"}</td>
                   <td>{tx.item_count}</td>
-                  <td>${tx.total_amount.toFixed(2)}</td>
+                  <td>{fmt(tx.total_amount)}</td>
                   <td>{new Date(tx.created_at).toLocaleDateString()}</td>
                   <td>
                     <div className={styles.actions}>
                       <button
                         className={styles.btnView}
                         onClick={() => openDetail(tx.id)}
-                        title="View detail"
+                        title={t("warehouse.viewDetail")}
                       >
                         <Eye size={14} />
                       </button>
                       {tx.type === "EXPORT" && (
                         <button
                           className={styles.btnInvoice}
-                          onClick={() => warehouseService.downloadInvoice(tx.id)}
-                          title="Download invoice"
+                          onClick={() =>
+                            warehouseService.downloadInvoice(tx.id)
+                          }
+                          title={t("warehouse.downloadInvoice")}
                         >
                           <FileDown size={14} />
                         </button>
@@ -248,7 +290,7 @@ export default function WarehousePage() {
         </table>
       </div>
 
-      {/* „Ÿ„Ÿ Pagination „Ÿ„Ÿ */}
+      {/* Â„ÂŸÂ„ÂŸ Pagination Â„ÂŸÂ„ÂŸ */}
       {totalPages > 1 && (
         <div className={styles.pagination}>
           <button
@@ -259,7 +301,9 @@ export default function WarehousePage() {
             <ChevronLeft size={16} />
           </button>
           {Array.from({ length: totalPages }, (_, i) => i + 1)
-            .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+            .filter(
+              (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2,
+            )
             .reduce<(number | "...")[]>((acc, p, idx, arr) => {
               if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
               acc.push(p);
@@ -267,7 +311,9 @@ export default function WarehousePage() {
             }, [])
             .map((p, i) =>
               p === "..." ? (
-                <span key={`e-${i}`} className={styles.pageEllipsis}>...</span>
+                <span key={`e-${i}`} className={styles.pageEllipsis}>
+                  ...
+                </span>
               ) : (
                 <button
                   key={p}
@@ -277,7 +323,7 @@ export default function WarehousePage() {
                 >
                   {p}
                 </button>
-              )
+              ),
             )}
           <button
             className={styles.pageBtn}
@@ -286,20 +332,26 @@ export default function WarehousePage() {
           >
             <ChevronRight size={16} />
           </button>
-          <span className={styles.pageInfo}>Page {page} of {totalPages}</span>
+          <span className={styles.pageInfo}>
+            {t("common.page")} {page} {t("common.of")} {totalPages}
+          </span>
         </div>
       )}
 
-      {/* „Ÿ„Ÿ Create Modal „Ÿ„Ÿ */}
+      {/* Â„ÂŸÂ„ÂŸ Create Modal Â„ÂŸÂ„ÂŸ */}
       {showCreate && (
         <div className={styles.overlay} onClick={closeCreate}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>
                 {createType === "IMPORT" ? (
-                  <><PackagePlus size={18} /> New Import</>
+                  <>
+                    <PackagePlus size={18} /> {t("warehouse.createImport")}
+                  </>
                 ) : (
-                  <><PackageMinus size={18} /> New Export</>
+                  <>
+                    <PackageMinus size={18} /> {t("warehouse.createExport")}
+                  </>
                 )}
               </h2>
               <button className={styles.modalClose} onClick={closeCreate}>
@@ -309,25 +361,31 @@ export default function WarehousePage() {
 
             <form className={styles.form} onSubmit={handleSubmit}>
               <div className={styles.field}>
-                <label>Note</label>
+                <label>{t("warehouse.noteLabel")}</label>
                 <input
                   value={createForm.note}
-                  onChange={(e) => setCreateForm((p) => ({ ...p, note: e.target.value }))}
-                  placeholder="Optional note..."
+                  onChange={(e) =>
+                    setCreateForm((p) => ({ ...p, note: e.target.value }))
+                  }
+                  placeholder={t("warehouse.notePlaceholder")}
                 />
               </div>
 
               <div className={styles.itemsSection}>
                 <div className={styles.itemsHeader}>
-                  <span>Products</span>
-                  <button type="button" className={styles.btnAddItem} onClick={addItem}>
-                    + Add row
+                  <span>{t("warehouse.itemsLabel")}</span>
+                  <button
+                    type="button"
+                    className={styles.btnAddItem}
+                    onClick={addItem}
+                  >
+                    {t("warehouse.addItem")}
                   </button>
                 </div>
                 <div className={styles.itemColLabels}>
-                  <span>Product</span>
-                  <span>Qty</span>
-                  <span>Unit price ($)</span>
+                  <span>{t("warehouse.product")}</span>
+                  <span>{t("warehouse.qty")}</span>
+                  <span>{t("warehouse.unitPrice")}</span>
                   <span />
                 </div>
                 {createForm.items.map((item, i) => (
@@ -337,7 +395,7 @@ export default function WarehousePage() {
                       onChange={(e) => selectProduct(i, Number(e.target.value))}
                       required
                     >
-                      <option value="">Select product ...</option>
+                      <option value="">{t("warehouse.select")}</option>
                       {products.map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.name} (stock: {p.stock})
@@ -348,7 +406,9 @@ export default function WarehousePage() {
                       type="number"
                       min="1"
                       value={item.quantity}
-                      onChange={(e) => updateItem(i, "quantity", Number(e.target.value))}
+                      onChange={(e) =>
+                        updateItem(i, "quantity", Number(e.target.value))
+                      }
                       required
                     />
                     <input
@@ -356,7 +416,9 @@ export default function WarehousePage() {
                       min="0"
                       step="0.01"
                       value={item.unit_price}
-                      onChange={(e) => updateItem(i, "unit_price", Number(e.target.value))}
+                      onChange={(e) =>
+                        updateItem(i, "unit_price", Number(e.target.value))
+                      }
                     />
                     <button
                       type="button"
@@ -371,21 +433,29 @@ export default function WarehousePage() {
               </div>
 
               <div className={styles.totalRow}>
-                Total: <strong>${createTotal.toFixed(2)}</strong>
+                {t("warehouse.totalLabel")} <strong>{fmt(createTotal)}</strong>
               </div>
 
               {submitError && <p className={styles.error}>{submitError}</p>}
 
               <div className={styles.modalActions}>
-                <button type="button" className={styles.btnCancel} onClick={closeCreate}>
-                  Cancel
+                <button
+                  type="button"
+                  className={styles.btnCancel}
+                  onClick={closeCreate}
+                >
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
-                  className={createType === "IMPORT" ? styles.btnSubmitImport : styles.btnSubmitExport}
+                  className={
+                    createType === "IMPORT"
+                      ? styles.btnSubmitImport
+                      : styles.btnSubmitExport
+                  }
                   disabled={submitting}
                 >
-                  {submitting ? "Saving..." : `Save ${createType === "IMPORT" ? "Import" : "Export"}`}
+                  {submitting ? t("common.saving") : createType === "IMPORT" ? t("warehouse.newImport") : t("warehouse.newExport")}
                 </button>
               </div>
             </form>
@@ -393,19 +463,19 @@ export default function WarehousePage() {
         </div>
       )}
 
-      {/* „Ÿ„Ÿ Detail Modal „Ÿ„Ÿ */}
+      {/* Â„ÂŸÂ„ÂŸ Detail Modal Â„ÂŸÂ„ÂŸ */}
       {showDetail && (
         <div className={styles.overlay} onClick={closeDetail}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>Transaction #{viewTx?.id ?? "c"}</h2>
+              <h2>{t("warehouse.detail")} #{viewTx?.id ?? ""}</h2>
               <button className={styles.modalClose} onClick={closeDetail}>
                 <X size={18} />
               </button>
             </div>
 
             {viewLoading ? (
-              <p className={styles.empty}>Loadingc</p>
+              <p className={styles.empty}>{t("common.loading")}</p>
             ) : detailError ? (
               <p className={styles.error}>{detailError}</p>
             ) : viewTx ? (
@@ -413,10 +483,12 @@ export default function WarehousePage() {
                 <div className={styles.detailMeta}>
                   <span
                     className={`${styles.badge} ${
-                      viewTx.type === "IMPORT" ? styles.badgeImport : styles.badgeExport
+                      viewTx.type === "IMPORT"
+                        ? styles.badgeImport
+                        : styles.badgeExport
                     }`}
                   >
-                    {viewTx.type}
+                    {viewTx.type === "IMPORT" ? t("warehouse.import") : t("warehouse.export")}
                   </span>
                   <span className={styles.detailDate}>
                     {new Date(viewTx.created_at).toLocaleString()}
@@ -431,10 +503,10 @@ export default function WarehousePage() {
                     <thead>
                       <tr>
                         <th>#</th>
-                        <th>Product</th>
-                        <th>Qty</th>
-                        <th>Unit price ($)</th>
-                        <th>Subtotal ($)</th>
+                        <th>{t("warehouse.product")}</th>
+                        <th>{t("warehouse.qty")}</th>
+                        <th>{t("warehouse.unitPrice")}</th>
+                        <th>{t("warehouse.subtotal")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -443,16 +515,20 @@ export default function WarehousePage() {
                           <td>{i + 1}</td>
                           <td>{item.product_name}</td>
                           <td>{item.quantity}</td>
-                          <td>${item.unit_price.toFixed(2)}</td>
-                          <td>${(item.quantity * item.unit_price).toFixed(2)}</td>
+                          <td>{fmt(item.unit_price)}</td>
+                          <td>
+                            {fmt(item.quantity * item.unit_price)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
                       <tr>
-                        <td colSpan={4} className={styles.totalLabel}>Total</td>
+                        <td colSpan={4} className={styles.totalLabel}>
+                          {t("common.total")}
+                        </td>
                         <td className={styles.totalValue}>
-                          ${viewTx.total_amount.toFixed(2)}
+                          {viewTx.total_amount.toLocaleString("vi-VN")}Ä‘
                         </td>
                       </tr>
                     </tfoot>
@@ -463,13 +539,15 @@ export default function WarehousePage() {
                   {viewTx.type === "EXPORT" && (
                     <button
                       className={styles.btnInvoiceLarge}
-                      onClick={() => warehouseService.downloadInvoice(viewTx.id)}
+                      onClick={() =>
+                        warehouseService.downloadInvoice(viewTx.id)
+                      }
                     >
-                      <FileDown size={15} /> Download Invoice
+                      <FileDown size={15} /> {t("warehouse.downloadInvoice")}
                     </button>
                   )}
                   <button className={styles.btnCancel} onClick={closeDetail}>
-                    Close
+                    {t("common.close")}
                   </button>
                 </div>
               </>
