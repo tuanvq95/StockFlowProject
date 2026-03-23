@@ -4,7 +4,7 @@ import MainLayout from "../components/layout/MainLayout";
 import PrivateRoute from "./PrivateRoute";
 import { ROUTES } from "../constants/routes";
 
-const Home = lazy(() => import("../pages/Home/Home"));
+const Dashboard = lazy(() => import("../pages/Dashboard/Dashboard"));
 const Product = lazy(() => import("../pages/Product/Product"));
 const Warehouse = lazy(() => import("../pages/Warehouse/Warehouse"));
 const Login = lazy(() => import("../pages/Login/Login"));
@@ -19,7 +19,7 @@ export default function AppRoutes() {
       {/* Protected routes wrapped in MainLayout */}
       <Route element={<PrivateRoute />}>
         <Route element={<MainLayout />}>
-          <Route path={ROUTES.HOME} element={<Home />} />
+          <Route path={ROUTES.HOME} element={<Dashboard />} />
           <Route path={ROUTES.PRODUCT} element={<Product />} />
           <Route path={ROUTES.WAREHOUSE} element={<Warehouse />} />
         </Route>

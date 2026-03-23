@@ -1,12 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { Home, Package, Warehouse } from "lucide-react";
+import { LayoutDashboard, Package, Warehouse } from "lucide-react";
 import { ROUTES } from "../../../constants/routes";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
-  { label: "Home",      to: ROUTES.HOME,      icon: <Home      size={18} /> },
-  { label: "Product",   to: ROUTES.PRODUCT,   icon: <Package   size={18} /> },
-  { label: "Warehouse", to: ROUTES.WAREHOUSE, icon: <Warehouse size={18} /> },
+  { label: "Dashboard", to: ROUTES.HOME,      icon: <LayoutDashboard size={18} /> },
+  { label: "Product",   to: ROUTES.PRODUCT,   icon: <Package         size={18} /> },
+  { label: "Warehouse", to: ROUTES.WAREHOUSE, icon: <Warehouse       size={18} /> },
 ];
 
 export default function Sidebar() {

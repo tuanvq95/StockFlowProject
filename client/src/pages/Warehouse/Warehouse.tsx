@@ -337,7 +337,7 @@ export default function WarehousePage() {
                       onChange={(e) => selectProduct(i, Number(e.target.value))}
                       required
                     >
-                      <option value="">Select productÅc</option>
+                      <option value="">Select product ...</option>
                       {products.map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.name} (stock: {p.stock})
@@ -385,7 +385,7 @@ export default function WarehousePage() {
                   className={createType === "IMPORT" ? styles.btnSubmitImport : styles.btnSubmitExport}
                   disabled={submitting}
                 >
-                  {submitting ? "SavingÅc" : `Save ${createType === "IMPORT" ? "Import" : "Export"}`}
+                  {submitting ? "Saving..." : `Save ${createType === "IMPORT" ? "Import" : "Export"}`}
                 </button>
               </div>
             </form>

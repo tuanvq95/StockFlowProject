@@ -2,6 +2,7 @@ package router
 
 import (
 	"go-crud/internal/domain/auth"
+	"go-crud/internal/domain/dashboard"
 	"go-crud/internal/domain/product"
 	"go-crud/internal/domain/user"
 	"go-crud/internal/domain/warehouse"
@@ -36,6 +37,10 @@ func SetupUserRoutes(r *gin.Engine, db *sqlx.DB) *gin.Engine {
 	warehouseSvc := warehouse.NewService(warehouseRepo)
 	warehouseHandler := warehouse.NewHandler(warehouseSvc)
 	warehouseHandler.RegisterRoutes(api)
+
+	// Dashboard
+	dashboardHandler := dashboard.NewHandler(db)
+	dashboardHandler.RegisterRoutes(api)
 
 	return r
 }
